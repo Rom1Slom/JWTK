@@ -1,0 +1,27 @@
+nom_du_projet/
+    manage.py
+    nom_du_projet/
+        __init__.py
+        settings.py
+        urls.py
+        wsgi.py
+
+
+ Le répertoire où vous allez installer vos applications se trouve à côté du fichier manage.py. C'est là que vous devriez créer vos nouvelles applications.
+
+ nom_du_projet/
+    manage.py
+    nom_du_projet/
+        __init__.py
+        settings.py
+        urls.py
+        wsgi.py
+    nom_de_l_application/
+        __init__.py
+        admin.py
+        apps.py
+        models.py
+        tests.py
+        views.py
+        migrations/
+            __init__.py

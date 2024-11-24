@@ -1,0 +1,51 @@
+{% load static %}
+<!-- C'est une balise. On peut créer aussi nos propres balises. -->
+<!-- static est une application de django que l'on retrouve dans settings.py -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenue pour sur l'application d'apprentissage du turc</title>
+    <link rel="stylesheet" type = "text/css" href = "{% static 'Project.css' %}">
+    <link rel="stylesheet"  href = "{% static 'css/main.css' %}">
+
+  </head>
+
+  <body>
+
+    <h3>Voici la liste des phrases à traduire</h3>
+    <ul>
+        {% for phrase in phrases %}
+        <li><a href ="{% url 'translate:show' phrase.lesson_id %}">{{phrase.traduction}}</a></li>
+        {%endfor%}
+
+    </ul>
+    <h3>C'est à vous !</h3>
+
+    <button id="myButton">Click me!</button>
+    <p id="message"></p>
+    <script src="{% static 'js/ajax.js' %}"></script>
+
+    <!-- <p>{{message}}</p> -->
+
+    {% comment  "la suite ne doit pas être apparent" %}
+    <!-- On ouvre cette balise pour ajouter des commentaires ou même des bouts de code dont on ne se servira pas après. -->
+    <h2>Welcome !</h2>
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit. 
+    Quos inventore facere reiciendis eius sed ipsa dignissimos eligendi 
+    dolores consequuntur asperiores similique excepturi, voluptas corporis ut id a possimus soluta. Architecto!
+    {% endcomment %}
+
+    {% lorem 10 w %}
+    <p>{%now "d m Y"%}</p>
+    
+    <p>{%now "d/m/Y"%}</p>
+    <p>{%now "d m Y H:i:s"%}</p>
+    <p>{%now "l d F Y"%}</p>
+
+    <!-- Faire de urls -->
+  
+
+</body>
+</html>

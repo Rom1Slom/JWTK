@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Leçons</title>
+    {% load static %}
+    {% load custom_filters %}
+    <link rel="stylesheet" href = "{% static 'bootstrap/css/bootstrap.min.css' %}">
+<body>
+    <div style="background: grey;" class="container">
+        <h1>Liste des Leçons</h1>
+    </div>
+
+<div style="background:rgb(235, 224, 125)" ; class="container">
+    <div class="row">
+    <div class="col-md-8">
+        <table class = 'table table-striped'>
+            <thead class = 'thead-dark'>
+                <tr>
+                    <th scope="col">Numéro</th>
+                    <th scope="col">Titre</th>
+                </tr>
+            </thead>
+                     
+            <tbody>
+                {% for lesson in lessons %}
+                <tr>
+                    <td scope="row">{{ lesson.number }}</td>
+                    <td>{{ lesson.title }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-md-4">
+        <table class="table table-bordered">
+
+            <tbody>
+                {% for row in batched_progress_data %}
+                <tr>
+                    {% for lesson in row %}
+                    <td class="progress-cell" style="background-color: {{ lesson.progress_percentage|color_from_progress }}">
+                        Leçon {{ lesson.lesson_number }}<br>
+                        {{ lesson.progress_percentage|floatformat:0 }}%
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+</div>    
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+</body>
+</html>

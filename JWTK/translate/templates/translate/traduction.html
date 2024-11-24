@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traduire la phrase</title>
+    <script>
+        let currentPhraseNumber = {{ phrase.phrase_number|default:0 }};
+        let lessonId = {{ lesson.id|default:0 }};
+    </script>
+    {% load static %}
+</head>
+<body>
+    <h1>Traduire la phrase</h1>
+    <label for="sourceLanguage">Langue source :</label>
+    <select id="sourceLanguage">
+        <option value="fr">Français</option>
+        <option value="en">Anglais</option>
+        <option value="tr">Turc</option>
+        <option value="ru">Russe</option>
+    </select>
+    <label for="targetLanguage">Langue cible :</label>
+    <select id="targetLanguage">
+        <option value="fr">Français</option>
+        <option value="en">Anglais</option>
+        <option value="tr">Turc</option>
+        <option value="ru">Russe</option>
+    </select>
+
+    <div id="phrase-container">
+        <p id="phrase" data-phrase-number="{{ phrase.phrase_number }}">{{ phrase.phrase }}</p>
+        <p id="traduction"></p>
+    </div>
+
+    <button onclick="afficherTraduction({{phrase.id}})">Afficher la traduction</button>
+    <button onclick="phraseSuivante()">Phrase suivante</button>
+    <button onclick="phrasePrecedente()">Phrase précédente</button>
+     
+    <!-- Définir les variables Django dans une balise de script -->
+    
+
+    <script src="{% static 'js/script.js' %}"></script>
+
+</body>
+</html>
+

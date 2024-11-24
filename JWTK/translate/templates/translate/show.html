@@ -1,0 +1,31 @@
+{% load static %}
+<!-- C'est une balise. On peut créer aussi nos propres balises. -->
+<!-- static est une application de django que l'on retrouve dans settings.py -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenue pour sur l'application d'apprentissage du turc</title>
+    <link rel="stylesheet" type = "text/css" href = "{% static 'Project.css' %}">
+    <link rel="stylesheet"  href = "{% static 'css/main.css' %}">
+
+
+
+
+   
+
+</head>
+<body>
+
+    <h1>Voici notre phrase à traduire</h1>
+    <h1>{{phrase.phrase}}</h1>
+    <p>From lesson : {{ phrase.phrase_lesson}}</p>
+    <p><a href = "{% url 'translate:index' %}">&laquo; Revenir à la liste des leçons </a></p>
+
+    <p>{%now "l d F Y"%}</p>
+
+    <!-- Faire de urls -->
+    
+</body>
+</html>
