@@ -33,7 +33,7 @@
         <p id="traduction"></p>
     </div>
 
-    <button onclick="afficherTraduction({{phrase.id}})">Afficher la traduction</button>
+    <button onclick="afficherTraduction(currentPhraseNumber)">Afficher la traduction</button>
     <button onclick="phraseSuivante()">Phrase suivante</button>
     <button onclick="phrasePrecedente()">Phrase précédente</button>
      
@@ -42,6 +42,6 @@
 
     <script src="{% static 'js/script.js' %}"></script>
 
-</body>
+</body> 
 </html>
 

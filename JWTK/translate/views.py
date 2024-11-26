@@ -7,8 +7,9 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from .forms import SignUpForm, LoginForm
 import random
-# Create your views here.
 
+
+# Create your views here.
 
 def index(request):
 
