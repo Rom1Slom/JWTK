@@ -1,0 +1,78 @@
+{% extends 'translate/base.html' %}
+
+<!-- {% block title %}Accueil{% endblock %} -->
+
+{% block content %}
+    <title>Navigation des phrases</title>
+    <script>
+        // Fonction pour charger une phrase en fonction de son ID
+        function loadPhrase(action) {
+            var currentId = parseInt(document.getElementById('current-id').value);
+            var totalPhrases = parseInt(document.getElementById('total-phrases').value);
+
+            if (action === 'next') {
+                currentId = currentId < totalPhrases ? currentId + 1 : 1;  // Passage à la phrase suivante
+            } else if (action === 'previous') {
+                currentId = currentId > 1 ? currentId - 1 : totalPhrases;  // Passage à la phrase précédente
+            }
+
+            // Rechargement de la page avec le nouvel ID de phrase
+            window.location.href = '/lesson/' + {{ lesson.id }} + '/phrase/' + currentId + '/';
+        }
+
+        // Fonction pour afficher/masquer la traduction
+        function toggleTranslation() {
+            var translation = document.getElementById('translation');
+            translation.style.display = (translation.style.display === 'none' || translation.style.display === '') ? 'block' : 'none';
+        }
+    </script>
+</head>
+<body>
+
+
+    <h1>Leçon : {{ lesson.title }}</h1>
+
+    <h2>Phrase numéro : {{ phrase.phrase_number }}</h2>  <!-- Affichage du numéro de la phrase -->
+
+    <h3>{{ phrase.phrase }}</h3>
+    <button id="complete-lesson-btn">Marquer cette leçon comme terminée</button>
+    <script>
+        document.getElementById('complete-lesson-btn').addEventListener('click', function() {
+            fetch('/mark_lesson_completed/{{ lesson.id }}/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Leçon marquée comme terminée !");
+                } else {
+                    alert("Erreur lors de la mise à jour.");
+                }
+            });
+        });
+    </script>
+
+
+
+    <div id="translation" style="display: {% if show_translation %} block {% else %} none {% endif %};">
+        <p><strong>Traduction:</strong> {{ phrase.translation_fr }}</p>
+    </div>
+
+    <div>
+        <button onclick="loadPhrase('previous')">Précédente</button>
+        <button onclick="loadPhrase('next')">Suivante</button>
+        <button onclick="toggleTranslation()">Traduction</button>
+    </div>
+
+    <!-- Bouton pour revenir à l'accueil -->
+    <div style="margin-top: 20px;">
+        <a href="{% url 'translate:accueil' %}" class="btn btn-primary">Retour à la liste des leçons</a>
+    </div>
+    
+    <!-- Stocker l'ID actuel et le nombre total de phrases dans des éléments cachés -->
+    <input type="hidden" id="current-id" value="{{ phrase.phrase_number }}">
+    <input type="hidden" id="total-phrases" value="{{ total_phrases }}">
+{%endblock %}

@@ -25,6 +25,7 @@ from django.contrib.auth.models import User
 class Lesson(models.Model):
     title = models.CharField(max_length=100)
     number = models.IntegerField(unique=True)
+    is_completed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Lesson {self.number}: {self.title}"
@@ -35,8 +36,11 @@ class Phrase(models.Model):
     translation_fr = models.CharField(max_length=256, null= True)
     translation_en = models.CharField(max_length=256, default='default_value')
     translation_ru = models.CharField(max_length=256, null= True)
-    phrase_number = models.IntegerField(null=True, blank=True, default=0, unique= True)
+    phrase_number = models.IntegerField(null=True, blank=True, default=0, unique= False)
     # id = models.AutoField(primary_key=True)
+    
+    class Meta:
+        unique_together = ('lesson', 'phrase_number')  # Unicité par leçon et numéro de phrase
 
     def __str__(self):
         return self.phrase

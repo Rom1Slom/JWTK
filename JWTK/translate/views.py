@@ -1,18 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseNotFound
 from django.template import loader 
 from .models import Phrase, Lesson, UserProgress
 from django.http import JsonResponse
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from .forms import SignUpForm, LoginForm
+from django.db.models import Count
 import random
+import logging
+import pandas as pd
 
+
+logger = logging.getLogger(__name__)
+# Rechercher les doublons
+duplicates = Phrase.objects.values('lesson', 'phrase_number').annotate(count=Count('id')).filter(count__gt=1)
+
+for dup in duplicates:
+    print(dup)
 
 # Create your views here.
 
 def index(request):
-
     context = {"phrases": Phrase.objects.all()}
     return render(request, "translate/accueil.html", context)
 
@@ -22,61 +31,46 @@ def show(request, phrase_lesson_id):
     return render(request, "translate/show.html", context)
 
 
-def phrase_a_traduire(request):
-    phrases = Phrase.objects.all().order_by('phrase_number')  # Récupérer toutes les phrases triées par leur numéro
-    if not phrases:
-        raise Http404('No phrase available')
+def phrase_navigation(request, lesson_id, current_id):
+    # Récupérer la leçon correspondante
+    current_lesson = get_object_or_404(Lesson, id=lesson_id)
     
-    # Récupérer le numéro de la phrase actuelle
-    current_phrase_number = request.GET.get('current_phrase_number')
-    if current_phrase_number is not None and current_phrase_number.isdigit():
-        current_phrase_number = int(current_phrase_number)
-        try:
-            current_phrase = phrases.get(phrase_number=current_phrase_number)
-        except Phrase.DoesNotExist:
-            current_phrase = None
-    else:
-        current_phrase = None
-        current_phrase_number = 0
+    # Récupérer toutes les phrases associées à cette leçon, triées par numéro
+    lesson_phrases = current_lesson.phrases.order_by('phrase_number')
+    total_phrases = lesson_phrases.count()
 
-    # Récupérer la phrase précédente ou suivante en fonction de la requête
-    if request.GET.get('previous'):  # Si l'on veut la phrase précédente
-        previous_phrase = phrases.filter(phrase_number__lt=current_phrase_number).order_by('-phrase_number').first()
-        if previous_phrase:
-            current_phrase = previous_phrase
-            current_phrase_number = current_phrase.phrase_number
-    else:  # Sinon on prend la phrase suivante
-        next_phrase = phrases.filter(phrase_number__gt=current_phrase_number).order_by('phrase_number').first()
-        if next_phrase:
-            current_phrase = next_phrase
-            current_phrase_number = next_phrase.phrase_number
+    # Récupérer la phrase actuelle
+    current_phrase = lesson_phrases.filter(phrase_number=current_id).first()
+    if not current_phrase:
+        return HttpResponseNotFound("phrase non trouvée dans cette leçon")
+    
+    # Détremnine the ID of the next and previous phrase in the current lesson
+    next_phrase = lesson_phrases.filter(phrase_number__gt=current_id).first()
+    previous_phrase = lesson_phrases.filter(phrase_number__lt=current_id).last()
 
-    if not current_phrase:  # Si aucune phrase n'a été trouvée, on prend la première phrase
-        current_phrase = phrases.first()
-        current_phrase_number = current_phrase.phrase_number
+    next_id = next_phrase.phrase_number if next_phrase else lesson_phrases.first().phrase_number
+    previous_id = previous_phrase.phrase_number if previous_phrase else lesson_phrases.last().phrase_number
+    
+    show_translation = 'translation' in request.GET
 
-    context = {  # Définir le contexte avant de l'utiliser
+    context = {
         'phrase': current_phrase,
-        'current_phrase_number': current_phrase_number,
+        'show_translation': show_translation,
+        'total_phrases': total_phrases,
+        'lesson': current_lesson,
+        'next_id':next_id,
+        'previous_id':previous_id,
     }
 
-    # Si la requête est une requête AJAX, on renvoie les données en HTML partiel
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return render(request, 'translate/accueil.html', context)
-    
-    # Sinon, on renvoie le template complet
-    return render(request, 'translate/traduction.html', context)
+    return render(request, "translate/phrase_navigation.html", context)
 
-
-
-def get_traduction(request, phrase_id):
-    try:
-        phrase = Phrase.objects.get(id=phrase_id)
-        return JsonResponse({
-            'phrase' : phrase.phrase,
-            'traduction': phrase.translation_fr})
-    except Phrase.DoesNotExist:
-        raise Http404("Phrase not found")
+def mark_lesson_completed (request, lesson_id):
+    if request.method == "POST":
+        lesson = get_object_or_404(Lesson, id=lesson_id)
+        lesson.is_completed = True
+        lesson.save()
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "error":'Méthode non autorisée'})
 
 
 
@@ -88,45 +82,17 @@ def my_view(request):
 
 
 def accueil(request):
-    # Créer une liste de nombres de 1 à 60
-    cases = list(range(1, 61))
-    # Découper la liste en sous-listes de 6 éléments pour former les lignes
-    lignes = [cases[i:i + 6] for i in range(0, len(cases), 6)]
-    # return render(request, 'translate/index.html', {'lignes': lignes})
-
-    # Récupérer toutes les leçons et leur progression pour l'utilisateur
+  
     lessons = Lesson.objects.all().order_by('number')
-    progress_data = []
-       
-    # Split `progress_data` into chunks of 6
-    def batch(iterable, batch_size):
-        for i in range(0, len(iterable), batch_size):
-            yield iterable[i:i + batch_size]
-
-    batched_progress_data = list(batch(progress_data[:60], 6))
-
-    for lesson in lessons:
-        # Récupérer ou créer la progression de l'utilisateur pour chaque leçon
-        user_progress, _ = UserProgress.objects.get_or_create(user=request.user, lesson=lesson)
-
-        # Compter les phrases dans chaque leçon et celles étudiées
-        total_phrases = lesson.phrases.count()
-        completed_phrases = user_progress.phrases_worked_on.count()
-        progress_percentage = (completed_phrases / total_phrases * 100) if total_phrases > 0 else 0
-        # Ajouter les données de progression
-        progress_data.append({
-            'lesson_number': lesson.number,
-            'title': lesson.title,
-            'progress_percentage': progress_percentage,
-        })
-
-    context = {"lessons": Lesson.objects.all(),
-               'lignes': lignes, 
-                'progress_data' : progress_data,
-                 'batched_progress_data': batched_progress_data }
-
+    total_lessons = lessons.count()
+    # Générer les cases : diviser les leçons en lignes de 6 colonnes par exemple
+    columns = 6
+    rows = [lessons[i:i + columns] for i in range(0, total_lessons, columns)]
+    context = {'lessons': lessons,
+               'rows':rows,
+               'show_sidebar': True}
+    
     return render(request, "translate/index.html", context)
-
 
 # def translate_lesson(request, lesson_id):
 #     lesson = get_object_or_404(Lesson, id=lesson_id)
@@ -167,3 +133,49 @@ def login_view(request):
         form = LoginForm()
     return render(request, 'translate/login.html', {'form': form})
 
+
+def import_phrases(request):
+    if request.method == "POST" and request.FILES['file']:
+        file = request.FILES['file']
+
+        # Lecture du fichie excel
+        df = pd.read_excel(file)
+
+        for index, row in df.iterrows():
+
+            Phrase.objects.create(
+                phrase_number = row['phrase_number'],
+                phrase=row['phrase'],
+                translation_fr=row['translation_fr'],
+                lesson_id = row['lesson_id']
+            )
+        return HttpResponse("Les phrases ont été importées avec succès.")
+
+    return render(request, 'translate/import_phrases.html')
+
+def import_lessons(request):
+    if request.method == 'POST':
+        file = request.FILES.get('file')
+        if not file:
+            return render(request, 'translate/import_phrase.html', {'error': 'Aucun fichier sélectionné.'})
+
+        try:
+            df = pd.read_excel(file)
+
+            # Vérifier les colonnes nécessaires
+            if not {'number', 'title'}.issubset(df.columns):
+                return render(request, 'translate/import_phrase.html', {'error': 'Le fichier doit contenir les colonnes "number" et "title".'})
+
+            # Importer les leçons
+            for _, row in df.iterrows():
+                Lesson.objects.update_or_create(
+                    number=row['number'],
+                    defaults={'title': row['title']}
+                )
+
+            return render(request, 'translate/import_phrase.html', {'success': 'Importation des leçons réussie !'})
+
+        except Exception as e:
+            return render(request, 'translate/import_phrase.html', {'error': f'Erreur lors de l\'importation des leçons : {str(e)}'})
+
+    return render(request, 'translate/import_phrase.html')

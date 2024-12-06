@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JWTK{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+</head>
+<body>
+   <!-- Barre de navigation -->
+   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">JWTK</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="{% url 'translate:index' %}">Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'translate:accueil' %}">Liste des Leçons</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'translate:import_phrases' %}">Importer des Phrases</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'translate:import_lessons' %}">Importer des Leçons</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+ 
+ <div class="container">
+    <div class="row">
+       
+                {% if show_sidebar %}
+                <!-- Colonne latérale gauche -->
+                <aside class="col-md-3 bg-light p-3">
+                    
+                    <h5>Tableau des leçons</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center">
+                            <tbody>
+                                {% for row in rows %}
+                                    <tr>
+                                        {% for lesson in row %}
+                                            <td 
+                                            class="{% if lesson.is_completed %} bg-success text-white {% endif %}" 
+                                            style="width: 50px; height: 50px;"
+                                            title="{{ lesson.title }}">
+                                            <a href="{% url 'translate:phrase_navigation' lesson.id 1 %}" 
+                                               class="text-decoration-none text-dark">
+                                                {{ lesson.number }}
+                                            </a>
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </aside>
+                {% endif %}
+                <!-- Contenu de la page base.html-->
+                <main class="col-md-9">
+                    {% block content %}
+                    <!-- Contenu spécifique à chaque page -->
+                    {% endblock %}
+                </main>
+    </div>
+</div>
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{% extends 'translate/base.html' %}
+
+<!-- {% block title %}Accueil{% endblock %} -->
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="action" accept="import_phrases">
+    <label for=""phrases_file">Fichier excel des phrases :</label>
+    <input type="file" name="file" accept=".xlsx,.xls">
+    <br></br>
+    <button type="submit">Importer les phrases</button>
+</form>
+<!-- Section pour importer des leçons -->
+<h2>Importer des leçons</h2>
+<form action="{% url 'translate:import_lessons' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label for="lessons_file">Fichier Excel des leçons :</label>
+    <input type="file" name="file" id="lessons_file" accept=".xls,.xlsx">
+    <br><br>
+    <button type="submit">Importer les leçons</button>
+</form>
+
+{% if success %}
+    <p style="color: green;">{{ success }}</p>
+{% elif error %}
+    <p style="color: red;">{{ error }}</p>
+{% endif %}
+{%endblock %}
